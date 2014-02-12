@@ -2,8 +2,12 @@
 
 import sys
 import os
+from os.path import expanduser
 from PIL import Image
 
+# ExIF data hex offsets
+cameraMake=0x010f
+cameraModel=0x0110
 lensModel=0xa434
 shutterSpeed=0x829a
 aperture=0x829d
@@ -46,25 +50,33 @@ for i in range(1, len(sys.argv)):
 			img = Image.open(sys.argv[i] + "/" + file)
 			exif.append([name, img._getexif()])
 
-file = open(sys.argv[i] + "/exifData.csv", "w")
+# Write csv to cross-platform Desktop folder (for now)
+home = expanduser("~")
+csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
 
-file.write("Filename,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
+file = open(csvFile, "w")
+file.write("Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
 for image in exif:
+	data = image[1]
 	file.write(image[0] + ",")
-	file.write(image[1][lensModel] + ",")
-	file.write(str(image[1][shutterSpeed][0]) + "/" + str(image[1][shutterSpeed][1]) + ",")
-	ap = float(image[1][aperture][0]) / image[1][aperture][1]
+	file.write(data[cameraMake] + ",")
+	file.write(data[cameraModel] + ",")
+	file.write(data[lensModel] + ",")
+	file.write(str(data[shutterSpeed][0]) + "/" + str(data[shutterSpeed][1]) + ",")
+	ap = float(data[aperture][0]) / data[aperture][1]
 	file.write(str(ap) + ",")
-	file.write(str(image[1][iso]) + ",")
-	fl = image[1][focalLen][0] / image[1][focalLen][1]
+	file.write(str(data[iso]) + ",")
+	fl = data[focalLen][0] / data[focalLen][1]
 	file.write(str(fl) + ",")
-	file.write(str(image[1][fullFrameFocalLen]) + ",")
-	file.write(str(image[1][isoSensType]) + ",")
-	file.write(str(image[1][exposureProg]) + ",")
-	file.write(str(image[1][exposureMode]) + ",")
-	file.write(str(image[1][metering]) + ",")
-	file.write(str(image[1][whiteBal]) + ",")
-	file.write(str(image[1][shotTime]) + "\n")
+	file.write(str(data[fullFrameFocalLen]) + ",")
+	file.write(str(data[isoSensType]) + ",")
+	file.write(str(data[exposureProg]) + ",")
+	file.write(str(data[exposureMode]) + ",")
+	file.write(str(data[metering]) + ",")
+	file.write(str(data[whiteBal]) + ",")
+	file.write(str(data[shotTime]) + "\n")
+
+file.close()
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59
@@ -73,5 +85,3 @@ for image in exif:
 #	file.write(hex(i) + "\t" + str(exif[0].get(i, "None")) + "\n")
 #print("First set done")
 ################################################################################
-
-file.close()
