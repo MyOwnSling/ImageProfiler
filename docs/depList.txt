@@ -1,0 +1,5 @@
+Stuff used:
+	* wxpython (GUI library)
+		- wxpython.org
+	* wxGlade (wxpython GUI layout editor)
+		- http://sourceforge.net/projects/wxglade/
