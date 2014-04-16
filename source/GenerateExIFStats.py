@@ -81,26 +81,29 @@ with open(csvFile, "w") as results_file:
         # extract metadata from exif info
         data = image[1]
 
-        cameraMake   = str(data[exif_fields['cameraMake']])
-        cameraModel  = str(data[exif_fields['cameraModel']])
-        exposureMode = str(data[exif_fields['exposureMode']])
-        exposureProg = str(data[exif_fields['exposureProg']])
-        ffFocalLen   = str(data[exif_fields['fullFrameFocalLen']])
-        iso          = str(data[exif_fields['iso']])
-        isoSensType  = str(data[exif_fields['isoSensType']])
-        lensModel    = str(data[exif_fields['lensModel']])
-        metering     = str(data[exif_fields['metering']])
-        shotTime     = str(data[exif_fields['shotTime']])
-        whileBalance = str(data[exif_fields['whileBal']])
+        cameraMake   = str(data.get(exif_fields['cameraMake']))
+        cameraModel  = str(data.get(exif_fields['cameraModel']))
+        exposureMode = str(data.get(exif_fields['exposureMode']))
+        exposureProg = str(data.get(exif_fields['exposureProg']))
+        ffFocalLen   = str(data.get(exif_fields['fullFrameFocalLen']))
+        iso          = str(data.get(exif_fields['iso']))
+        isoSensType  = str(data.get(exif_fields['isoSensType']))
+        lensModel    = str(data.get(exif_fields['lensModel']))
+        metering     = str(data.get(exif_fields['metering']))
+        shotTime     = str(data.get(exif_fields['shotTime']))
+        whiteBalance = str(data.get(exif_fields['whiteBal']))
 
-        _shutterSpd  = data[exif_fields['shutterSpeed']]
-        shutterSpeed = str(_shutterSpd[0]) + "/" + str(_shutterSpd[1])
+        _shutterSpd  = data.get(exif_fields['shutterSpeed'])
+        if _shutterSpd is not None:
+            shutterSpeed = str(_shutterSpd[0]) + "/" + str(_shutterSpd[1])
 
-        _ap          = data[exif_fields['aperture']]
-        aperture     = str(float(_ap[0]) / _ap[1])
+        _ap          = data.get(exif_fields['aperture'])
+        if _ap is not None:
+            aperture     = str(float(_ap[0]) / _ap[1])
 
-        _focalLen    = data[exif_fields['focalLen']]
-        focalLength  = str(_focalLen[0] / _focalLen[1])
+        _focalLen    = data.get(exif_fields['focalLen'])
+        if _ap is not None:
+            focalLength  = str(_focalLen[0] / _focalLen[1])
 
         # write metadata to new CSV row
 
