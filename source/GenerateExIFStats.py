@@ -6,23 +6,38 @@ from os.path import expanduser
 from PIL import Image
 
 # ExIF data hex offsets
-cameraMake=0x010f
-cameraModel=0x0110
-lensModel=0xa434
-shutterSpeed=0x829a
-aperture=0x829d
-iso=0x8827
-focalLen=0x920a
-fullFrameFocalLen=0xa405
-isoSensType=0x8830
-exposureProg=0x8822
-exposureMode=0xa402
-metering=0x9207
-whiteBal=0xa403
-shotTime=0x9003
 
-#eComp=0x9204
-#lensMake=0xa433
+field_names = ['cameraMake',
+               'cameraModel',
+               'lensModel',
+               'shutterSpeed',
+               'aperture',
+               'iso',
+               'focalLen',
+               'fullFrameFocalLen',
+               'isoSensType',
+               'exposureProg',
+               'exposureMode',
+               'metering',
+               'whiteBal',
+               'shotTime']
+
+hex_offsets = [0x010f,
+               0x0110,
+               0xa434,
+               0x829a,
+               0x829d,
+               0x8827,
+               0x920a,
+               0xa405,
+               0x8830,
+               0x8822,
+               0xa402,
+               0x9207,
+               0xa403,
+               0x9003]
+
+exif_fields = dict(zip(field_names, hex_offsets))
 
 if len(sys.argv) < 2:
     print("No directories specified")
@@ -54,29 +69,54 @@ for i in range(1, len(sys.argv)):
 home = expanduser("~")
 csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
 
-file = open(csvFile, "w")
-file.write("Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
-for image in exif:
-    data = image[1]
-    file.write(image[0] + ",")
-    file.write(data[cameraMake] + ",")
-    file.write(data[cameraModel] + ",")
-    file.write(data[lensModel] + ",")
-    file.write(str(data[shutterSpeed][0]) + "/" + str(data[shutterSpeed][1]) + ",")
-    ap = float(data[aperture][0]) / data[aperture][1]
-    file.write(str(ap) + ",")
-    file.write(str(data[iso]) + ",")
-    fl = data[focalLen][0] / data[focalLen][1]
-    file.write(str(fl) + ",")
-    file.write(str(data[fullFrameFocalLen]) + ",")
-    file.write(str(data[isoSensType]) + ",")
-    file.write(str(data[exposureProg]) + ",")
-    file.write(str(data[exposureMode]) + ",")
-    file.write(str(data[metering]) + ",")
-    file.write(str(data[whiteBal]) + ",")
-    file.write(str(data[shotTime]) + "\n")
+with open(csvFile, "w") as results_file:
 
-file.close()
+    results_file.write("Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
+
+    for image in exif:
+
+        # extract metadata from exif info
+        data = image[1]
+
+        cameraMake   = str(data[exif_fields['cameraMake']])
+        cameraModel  = str(data[exif_fields['cameraModel']])
+        exposureMode = str(data[exif_fields['exposureMode']])
+        exposureProg = str(data[exif_fields['exposureProg']])
+        ffFocalLen   = str(data[exif_fields['fullFrameFocalLen']])
+        iso          = str(data[exif_fields['iso']])
+        isoSensType  = str(data[exif_fields['isoSensType']])
+        lensModel    = str(data[exif_fields['lensModel']])
+        metering     = str(data[exif_fields['metering']])
+        shotTime     = str(data[exif_fields['shotTime']])
+        whileBalance = str(data[exif_fields['whileBal']])
+
+        _shutterSpd  = data[exif_fields['shutterSpeed']]
+        shutterSpeed = str(_shutterSpd[0]) + "/" + str(_shutterSpd[1])
+
+        _ap          = data[exif_fields['aperture']]
+        aperture     = str(float(_ap[0]) / _ap[1])
+
+        _focalLen    = data[exif_fields['focalLen']]
+        focalLength  = str(_focalLen[0] / _focalLen[1])
+
+        # write metadata to new CSV row
+
+        results_file.write(image[0] + ",")
+
+        results_file.write(cameraMake + ",")
+        results_file.write(cameraModel + ",")
+        results_file.write(lensModel + ",")
+        results_file.write(shutterSpeed + ",")
+        results_file.write(aperture + ",")
+        results_file.write(iso + ",")
+        results_file.write(focalLength + ",")
+        results_file.write(ffFocalLen + ",")
+        results_file.write(isoSensType + ",")
+        results_file.write(exposureProg + ",")
+        results_file.write(exposureMode + ",")
+        results_file.write(metering + ",")
+        results_file.write(whiteBalance + ",")
+        results_file.write(shotTime + ",")
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59
