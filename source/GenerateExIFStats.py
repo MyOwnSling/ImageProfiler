@@ -50,19 +50,22 @@ for i in range(1, len(sys.argv)):
 
 print("All folders found")
 
-exif = []
-for i in range(1, len(sys.argv)):
-    print("Processing " + sys.argv[i])
-    #print(os.listdir(sys.argv[i]))
-    files = [f for f in os.listdir(sys.argv[i]) if os.path.isfile(sys.argv[i] + "/" + f)]
-    #print(files)
+exif = list()
+for directory in sys.argv[1:]:
+
+    print("Processing " + directory)
+
+    dir_list = map(lambda x: os.path.join(directory, x), os.listdir(directory))
+    files = filter(lambda x: os.path.isfile(x), dir_list)
+
     if len(files) < 1:
-        print("No image files found in " + sys.argv[i])
+        print("No image files found in " + directory)
         sys.exit()
-    for file in files:
-        name, extension = os.path.splitext(file)
+
+    for file_path in files:
+        name, extension = os.path.splitext(file_path)
         if extension == '.jpg' or extension == '.jpeg':
-            img = Image.open(sys.argv[i] + "/" + file)
+            img = Image.open(os.path.join(directory, file_path))
             exif.append([name, img._getexif()])
 
 # Write csv to cross-platform Desktop folder (for now)
