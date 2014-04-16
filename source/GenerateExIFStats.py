@@ -113,22 +113,24 @@ with open(csvFile, 'w') as results_file:
 
         # write metadata to new CSV row
 
-        results_file.write(filename + ',')
+        write = lambda x: results_file.write(x + ',')
 
-        results_file.write(cameraMake + ',')
-        results_file.write(cameraModel + ',')
-        results_file.write(lensModel + ',')
-        results_file.write(shutterSpeed + ',')
-        results_file.write(aperture + ',')
-        results_file.write(iso + ',')
-        results_file.write(focalLength + ',')
-        results_file.write(ffFocalLen + ',')
-        results_file.write(isoSensType + ',')
-        results_file.write(exposureProg + ',')
-        results_file.write(exposureMode + ',')
-        results_file.write(metering + ',')
-        results_file.write(whiteBalance + ',')
-        results_file.write(shotTime + ',')
+        write(filename)
+        write(cameraMake)
+        write(cameraModel)
+        write(lensModel)
+        write(shutterSpeed)
+        write(aperture)
+        write(iso)
+        write(focalLength)
+        write(ffFocalLen)
+        write(isoSensType)
+        write(exposureProg)
+        write(exposureMode)
+        write(metering)
+        write(whiteBalance)
+        write(shotTime)
+
         results_file.write('\n')
 
 # TEST CODE ONLY ###############################################################
