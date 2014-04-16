@@ -56,6 +56,7 @@ for directory in sys.argv[1:]:
     print("Processing " + directory)
 
     dir_list = map(lambda x: os.path.join(directory, x), os.listdir(directory))
+
     files = filter(lambda x: os.path.isfile(x), dir_list)
 
     if len(files) < 1:
@@ -76,11 +77,12 @@ with open(csvFile, "w") as results_file:
 
     results_file.write("Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
 
-    for image in exif:
+    for filename, data in exif:
+
+        if data is None:
+            data = dict()
 
         # extract metadata from exif info
-        data = image[1]
-
         cameraMake   = str(data.get(exif_fields['cameraMake']))
         cameraModel  = str(data.get(exif_fields['cameraModel']))
         exposureMode = str(data.get(exif_fields['exposureMode']))
@@ -93,21 +95,27 @@ with open(csvFile, "w") as results_file:
         shotTime     = str(data.get(exif_fields['shotTime']))
         whiteBalance = str(data.get(exif_fields['whiteBal']))
 
-        _shutterSpd  = data.get(exif_fields['shutterSpeed'])
+        _shutterSpd = data.get(exif_fields['shutterSpeed'])
         if _shutterSpd is not None:
             shutterSpeed = str(_shutterSpd[0]) + "/" + str(_shutterSpd[1])
+        else:
+            shutterSpeed = ''
 
-        _ap          = data.get(exif_fields['aperture'])
+        _ap = data.get(exif_fields['aperture'])
         if _ap is not None:
-            aperture     = str(float(_ap[0]) / _ap[1])
+            aperture = str(float(_ap[0]) / _ap[1])
+        else:
+            aperture = ''
 
-        _focalLen    = data.get(exif_fields['focalLen'])
-        if _ap is not None:
-            focalLength  = str(_focalLen[0] / _focalLen[1])
+        _focalLen = data.get(exif_fields['focalLen'])
+        if _focalLen is not None:
+            focalLength = str(_focalLen[0] / _focalLen[1])
+        else:
+            focalLength = ''
 
         # write metadata to new CSV row
 
-        results_file.write(image[0] + ",")
+        results_file.write(filename + ",")
 
         results_file.write(cameraMake + ",")
         results_file.write(cameraModel + ",")
@@ -123,6 +131,7 @@ with open(csvFile, "w") as results_file:
         results_file.write(metering + ",")
         results_file.write(whiteBalance + ",")
         results_file.write(shotTime + ",")
+        results_file.write("\n")
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59
