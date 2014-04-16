@@ -43,9 +43,9 @@ if len(sys.argv) < 2:
     print("No directories specified")
     sys.exit()
 
-for i in range(1, len(sys.argv)):
-    if not os.path.exists(sys.argv[i]):
-        print("Invalid directory: " + sys.argv[i])
+for directory in sys.argv[1:]:
+    if not os.path.exists(directory):
+        print("Invalid directory: " + directory)
         sys.exit()
 
 print("All folders found")
@@ -64,7 +64,7 @@ for directory in sys.argv[1:]:
 
     for file_path in files:
         name, extension = os.path.splitext(file_path)
-        if extension == '.jpg' or extension == '.jpeg':
+        if extension in ('.jpg', '.JPG', '.jpeg', '.JPEG'):
             img = Image.open(os.path.join(directory, file_path))
             exif.append([name, img._getexif()])
 
