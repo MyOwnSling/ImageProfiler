@@ -40,27 +40,25 @@ hex_offsets = [0x010f,
 exif_fields = dict(zip(field_names, hex_offsets))
 
 if len(sys.argv) < 2:
-    print("No directories specified")
+    print('No directories specified')
     sys.exit()
 
 for directory in sys.argv[1:]:
     if not os.path.exists(directory):
-        print("Invalid directory: " + directory)
+        print('Invalid directory: ' + directory)
         sys.exit()
 
-print("All folders found")
+print('All folders found')
 
 exif = list()
 for directory in sys.argv[1:]:
-
-    print("Processing " + directory)
+    print('Processing ' + directory)
 
     dir_list = map(lambda x: os.path.join(directory, x), os.listdir(directory))
-
     files = filter(lambda x: os.path.isfile(x), dir_list)
 
     if len(files) < 1:
-        print("No image files found in " + directory)
+        print('No image files found in ' + directory)
         sys.exit()
 
     for file_path in files:
@@ -70,12 +68,12 @@ for directory in sys.argv[1:]:
             exif.append([name, img._getexif()])
 
 # Write csv to cross-platform Desktop folder (for now)
-home = expanduser("~")
+home = expanduser('~')
 csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
 
-with open(csvFile, "w") as results_file:
+with open(csvFile, 'w') as results_file:
 
-    results_file.write("Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n")
+    results_file.write('Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n')
 
     for filename, data in exif:
 
@@ -97,7 +95,7 @@ with open(csvFile, "w") as results_file:
 
         _shutterSpd = data.get(exif_fields['shutterSpeed'])
         if _shutterSpd is not None:
-            shutterSpeed = str(_shutterSpd[0]) + "/" + str(_shutterSpd[1])
+            shutterSpeed = str(_shutterSpd[0]) + '/' + str(_shutterSpd[1])
         else:
             shutterSpeed = ''
 
@@ -115,28 +113,28 @@ with open(csvFile, "w") as results_file:
 
         # write metadata to new CSV row
 
-        results_file.write(filename + ",")
+        results_file.write(filename + ',')
 
-        results_file.write(cameraMake + ",")
-        results_file.write(cameraModel + ",")
-        results_file.write(lensModel + ",")
-        results_file.write(shutterSpeed + ",")
-        results_file.write(aperture + ",")
-        results_file.write(iso + ",")
-        results_file.write(focalLength + ",")
-        results_file.write(ffFocalLen + ",")
-        results_file.write(isoSensType + ",")
-        results_file.write(exposureProg + ",")
-        results_file.write(exposureMode + ",")
-        results_file.write(metering + ",")
-        results_file.write(whiteBalance + ",")
-        results_file.write(shotTime + ",")
-        results_file.write("\n")
+        results_file.write(cameraMake + ',')
+        results_file.write(cameraModel + ',')
+        results_file.write(lensModel + ',')
+        results_file.write(shutterSpeed + ',')
+        results_file.write(aperture + ',')
+        results_file.write(iso + ',')
+        results_file.write(focalLength + ',')
+        results_file.write(ffFocalLen + ',')
+        results_file.write(isoSensType + ',')
+        results_file.write(exposureProg + ',')
+        results_file.write(exposureMode + ',')
+        results_file.write(metering + ',')
+        results_file.write(whiteBalance + ',')
+        results_file.write(shotTime + ',')
+        results_file.write('\n')
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59
-# To see which fields are used, run "grep -iv none" on the output file; the results are the used fields
+# To see which fields are used, run 'grep -iv none' on the output file; the results are the used fields
 #for i in range(0x00, 0xfe59):
-#   file.write(hex(i) + "\t" + str(exif[0].get(i, "None")) + "\n")
-#print("First set done")
+#   file.write(hex(i) + '\t' + str(exif[0].get(i, 'None')) + '\n')
+#print('First set done')
 ################################################################################
