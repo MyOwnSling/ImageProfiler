@@ -51,6 +51,7 @@ for directory in sys.argv[1:]:
 print('All folders found')
 
 exif = list()
+badFiles = list()
 for directory in sys.argv[1:]:
     print('Processing ' + directory)
 
@@ -63,9 +64,17 @@ for directory in sys.argv[1:]:
 
     for file_path in files:
         name, extension = os.path.splitext(file_path)
+	#print "Processing image: %s" % name + extension
         if extension in ('.jpg', '.JPG', '.jpeg', '.JPEG'):
-            img = Image.open(os.path.join(directory, file_path))
-            exif.append([name, img._getexif()])
+	    try:
+                img = Image.open(os.path.join(directory, file_path))
+                exif.append([name, img._getexif()])
+	    except:
+	        print "File unable to be processed: ", name + extension
+		badFiles.append(name + extension)
+print "Errors in %s files: " % (str(len(badFiles)))
+for bf in badFiles:
+    print "\t" + bf
 
 # Write csv to cross-platform Desktop folder (for now)
 home = expanduser('~')
