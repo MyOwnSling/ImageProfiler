@@ -4,9 +4,63 @@ import sys
 import os
 from os.path import expanduser
 from PIL import Image
+import argparse
+
+def generatePieChart(chartName, chartDataArray):
+    # Generate pie chart
+    from pylab import *
+
+    # Get total number of data points
+    total = len(chartDataArray)
+    slices = []
+
+    # Generate list of data "slices" and the quantity associated with each
+    for item in chartDataArray:
+        isNew = True
+        for element in slices:
+            if element[0] == item:
+                element[1] += 1
+                isNew = False
+                break
+        if isNew:
+            slices.append([item, 1])
+
+    # make a square figure and axes
+    figure(1, figsize=(6,6))
+    ax = axes([0.1, 0.1, 0.8, 0.8])
+
+    # The slices will be ordered and plotted counter-clockwise.
+    labels = [ str(x[0]) for x in slices ]
+    fracs = [ 1.0 * x[1] / total for x in slices ]
+    explode = []
+    for x in range(len(slices)):
+        explode.append(0.05)
+
+    # Create and show the pie chart
+    pie(fracs, labels=labels, explode=explode, autopct='%1.1f%%', shadow=True, startangle=90)
+    title(chartName, bbox={'facecolor':'0.8', 'pad':5})
+    show()
+
+
+
+# parser = argparse.ArgumentParser()
+# parser.add_argument("path", type=string, help="Path to the folder of pictures to be processed")
+# parser.add_argument("-p", "--pie-chart", help="Draw a pie chart using the data from the specified metric")
+# # cameraModelArray.append(cameraModel)
+# # exposureModeArray.append(exposureMode)
+# # exposureProgArray.append(exposureProg)
+# # ffFocalLenArray.append(ffFocalLen)
+# # isoArray.append(iso)
+# # lensModelArray.append(lensModel)
+# # meteringArray.append(metering)
+# # shutterSpeedArray.append(shutterSpeed)
+# # apertureArray.append(aperture)
+# # focalLengthArray.append(focalLength)
+# args = parser.parse_args()
+
+
 
 # ExIF data hex offsets
-
 field_names = ['cameraMake',
                'cameraModel',
                'lensModel',
@@ -46,7 +100,7 @@ if len(sys.argv) < 2:
 for directory in sys.argv[1:]:
     if not os.path.exists(directory):
         print('Invalid directory: ' + directory)
-        sys.exit()
+        sys.exit(1)
 
 print('All folders found')
 
@@ -60,12 +114,12 @@ for directory in sys.argv[1:]:
 
     if len(files) < 1:
         print('No image files found in ' + directory)
-        sys.exit()
+        sys.exit(2)
 
     for file_path in files:
         name, extension = os.path.splitext(file_path)
 	#print "Processing image: %s" % name + extension
-        if extension in ('.jpg', '.JPG', '.jpeg', '.JPEG'):
+        if extension.lower() in ('.jpg', '.jpeg'):
 	    try:
                 img = Image.open(os.path.join(directory, file_path))
                 exif.append([name, img._getexif()])
@@ -80,8 +134,21 @@ for bf in badFiles:
 home = expanduser('~')
 csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
 
+# Init metadata arrays
+cameraModelArray = []
+exposureModeArray = []
+exposureProgArray = []
+ffFocalLenArray = []
+isoArray = []
+lensModelArray = []
+meteringArray = []
+shutterSpeedArray = []
+apertureArray = []
+focalLengthArray = []
+
 with open(csvFile, 'w') as results_file:
 
+    # Write column headers to CSV
     results_file.write('Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n')
 
     for filename, data in exif:
@@ -102,6 +169,7 @@ with open(csvFile, 'w') as results_file:
         shotTime     = str(data.get(exif_fields['shotTime']))
         whiteBalance = str(data.get(exif_fields['whiteBal']))
 
+        # Do some special data handling for a few fields
         _shutterSpd = data.get(exif_fields['shutterSpeed'])
         if _shutterSpd is not None:
             shutterSpeed = str(_shutterSpd[0]) + '/' + str(_shutterSpd[1])
@@ -140,7 +208,23 @@ with open(csvFile, 'w') as results_file:
         write(whiteBalance)
         write(shotTime)
 
+        cameraModelArray.append(cameraModel)
+        exposureModeArray.append(exposureMode)
+        exposureProgArray.append(exposureProg)
+        ffFocalLenArray.append(ffFocalLen)
+        isoArray.append(iso)
+        lensModelArray.append(lensModel)
+        meteringArray.append(metering)
+        shutterSpeedArray.append(shutterSpeed)
+        apertureArray.append(aperture)
+        focalLengthArray.append(focalLength)
+
         results_file.write('\n')
+
+
+# Test code
+#generatePieChart("Shutterspeed", shutterSpeedArray)
+
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59

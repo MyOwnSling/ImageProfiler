@@ -1,5 +1,10 @@
 Stuff used:
 	* wxpython (GUI library)
+		- for the GUI component only
 		- wxpython.org
 	* wxGlade (wxpython GUI layout editor)
+		- for the GUI component only
 		- http://sourceforge.net/projects/wxglade/
+	* python-matplotlib
+		- for pie chart visualization
+		- http://www.scipy.org/install.html
