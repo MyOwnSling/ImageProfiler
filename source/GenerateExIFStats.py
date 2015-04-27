@@ -8,7 +8,7 @@ import argparse
 
 def generatePieChart(chartName, chartDataArray):
     # Generate pie chart
-    from pylab import *
+    from pylab import figure, axes, pie, title, show
 
     # Get total number of data points
     total = len(chartDataArray)
@@ -41,24 +41,30 @@ def generatePieChart(chartName, chartDataArray):
     title(chartName, bbox={'facecolor':'0.8', 'pad':5})
     show()
 
+# Init metadata arrays
+cameraModelArray = []
+exposureModeArray = []
+exposureProgArray = []
+ffFocalLenArray = []
+isoArray = []
+lensModelArray = []
+meteringArray = []
+shutterSpeedArray = []
+apertureArray = []
+focalLengthArray = []
 
+# Parse supplied arguments
+# Parser expects mandatory path to images folder, optional arg specifying pie chart to be created
+parser = argparse.ArgumentParser()
+parser.add_argument("path", type=str, help="Path to the folder of pictures to be processed")
+parser.add_argument("-p", "--piechart", type=str, choices=['camera', 'exposureMode', 'exposureProg', 'focalLengthFF', 'iso', 'lensModel', 'metering', 'shutterSpeed', 'aperture', 'focalLength'], help="Draw a pie chart using the data from the specified metric")
+#parser.add_argument("--destination", "-d", type=str, help="Destination of the csv to be created")
+args = parser.parse_args()
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("path", type=string, help="Path to the folder of pictures to be processed")
-# parser.add_argument("-p", "--pie-chart", help="Draw a pie chart using the data from the specified metric")
-# # cameraModelArray.append(cameraModel)
-# # exposureModeArray.append(exposureMode)
-# # exposureProgArray.append(exposureProg)
-# # ffFocalLenArray.append(ffFocalLen)
-# # isoArray.append(iso)
-# # lensModelArray.append(lensModel)
-# # meteringArray.append(metering)
-# # shutterSpeedArray.append(shutterSpeed)
-# # apertureArray.append(aperture)
-# # focalLengthArray.append(focalLength)
-# args = parser.parse_args()
-
-
+# Make sure the specified path exists
+if not os.path.exists(args.path):
+    print('Invalid directory: ' + args.path)
+    sys.exit(1)
 
 # ExIF data hex offsets
 field_names = ['cameraMake',
@@ -93,58 +99,36 @@ hex_offsets = [0x010f,
 
 exif_fields = dict(zip(field_names, hex_offsets))
 
-if len(sys.argv) < 2:
-    print('No directories specified')
-    sys.exit()
-
-for directory in sys.argv[1:]:
-    if not os.path.exists(directory):
-        print('Invalid directory: ' + directory)
-        sys.exit(1)
-
-print('All folders found')
-
 exif = list()
 badFiles = list()
-for directory in sys.argv[1:]:
-    print('Processing ' + directory)
+directory = args.path
+print('Processing ' + directory)
 
-    dir_list = map(lambda x: os.path.join(directory, x), os.listdir(directory))
-    files = filter(lambda x: os.path.isfile(x), dir_list)
+dir_list = map(lambda x: os.path.join(directory, x), os.listdir(directory))
+files = filter(lambda x: os.path.isfile(x), dir_list)
 
-    if len(files) < 1:
-        print('No image files found in ' + directory)
-        sys.exit(2)
+# Make sure that we have at least one image to process
+if len(files) < 1:
+    print('No image files found in ' + directory)
+    sys.exit(1)
 
-    for file_path in files:
-        name, extension = os.path.splitext(file_path)
-	#print "Processing image: %s" % name + extension
-        if extension.lower() in ('.jpg', '.jpeg'):
-	    try:
+for file_path in files:
+    name, extension = os.path.splitext(file_path)
+    if extension.lower() in ('.jpg', '.jpeg'):
+        try:
                 img = Image.open(os.path.join(directory, file_path))
                 exif.append([name, img._getexif()])
-	    except:
-	        print "File unable to be processed: ", name + extension
-		badFiles.append(name + extension)
-print "Errors in %s files: " % (str(len(badFiles)))
+        except:
+            print "File unable to be processed: ", name + extension
+            badFiles.append(name + extension)
+if len(badFiles) > 0:
+    print "Errors in %s files: " % (str(len(badFiles)))
 for bf in badFiles:
     print "\t" + bf
 
 # Write csv to cross-platform Desktop folder (for now)
 home = expanduser('~')
 csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
-
-# Init metadata arrays
-cameraModelArray = []
-exposureModeArray = []
-exposureProgArray = []
-ffFocalLenArray = []
-isoArray = []
-lensModelArray = []
-meteringArray = []
-shutterSpeedArray = []
-apertureArray = []
-focalLengthArray = []
 
 with open(csvFile, 'w') as results_file:
 
@@ -189,7 +173,6 @@ with open(csvFile, 'w') as results_file:
             focalLength = ''
 
         # write metadata to new CSV row
-
         write = lambda x: results_file.write(x + ',')
 
         write(filename)
@@ -221,6 +204,36 @@ with open(csvFile, 'w') as results_file:
 
         results_file.write('\n')
 
+if args.piechart:
+    pc = args.piechart
+    chartInfo = []
+    # Switch on pie chart data set
+    if pc == 'camera':
+        chartInfo = ['Camera Model', cameraModelArray]
+    elif pc == 'exposureMode':
+        chartInfo = ['Exposure Mode', exposureModeArray]
+    elif pc == 'exposureProg':
+        chartInfo = ['Exposure Program', exposureProgArray]
+    elif pc == 'focalLengthFF':
+        chartInfo = ['Full Frame Focal Length', ffFocalLenArray]
+    elif pc == 'iso':
+        chartInfo = ['ISO', isoArray]
+    elif pc == 'lensModel':
+        chartInfo = ['Lens Model', lensModelArray]
+    elif pc == 'metering':
+        chartInfo = ['Metering', meteringArray]
+    elif pc == 'shutterSpeed':
+        chartInfo = ['Shutter Speed', shutterSpeedArray]
+    elif pc == 'aperture':
+        chartInfo = ['Aperture', apertureArray]
+    elif pc == 'focalLength':
+        chartInfo = ['Focal Length', focalLengthArray]
+    else:
+        print "Invalid pie chart specified; valid values: camera, exposureMode, exposureProg, focalLengthFF, iso, lensModel, metering, shutterSpeed, aperture, focalLength"
+        sys.exit(-1)
+
+    # Draw pie chart
+    generatePieChart(chartInfo[0], chartInfo[1])
 
 # Test code
 #generatePieChart("Shutterspeed", shutterSpeedArray)
