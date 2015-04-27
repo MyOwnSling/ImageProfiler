@@ -7,6 +7,7 @@ from PIL import Image
 import argparse
 
 def generatePieChart(chartName, chartDataArray):
+    '''generatePieChart will generate and display a pie chart using the provided data and title'''
     # Generate pie chart
     from pylab import figure, axes, pie, title, show
 
@@ -58,13 +59,35 @@ focalLengthArray = []
 parser = argparse.ArgumentParser()
 parser.add_argument("path", type=str, help="Path to the folder of pictures to be processed")
 parser.add_argument("-p", "--piechart", type=str, choices=['camera', 'exposureMode', 'exposureProg', 'focalLengthFF', 'iso', 'lensModel', 'metering', 'shutterSpeed', 'aperture', 'focalLength'], help="Draw a pie chart using the data from the specified metric")
-#parser.add_argument("--destination", "-d", type=str, help="Destination of the csv to be created")
+parser.add_argument("--destination", "-d", type=str, help="Destination of the csv to be created")
 args = parser.parse_args()
 
 # Make sure the specified path exists
 if not os.path.exists(args.path):
     print('Invalid directory: ' + args.path)
     sys.exit(1)
+
+# Create default path for the csv file (user's desktop)
+home = expanduser('~')
+csvFile = os.path.join(home, 'Desktop', 'exifData')
+destFolder = os.path.join(home, 'Desktop')
+# Make sure the destination path exists, if specified
+if args.destination:
+    destFolder = os.path.join(home, args.destination)
+    csvFile = os.path.join(destFolder, 'exifData')
+    if not os.path.exists(destFolder):
+        print('Invalid destination directory: ' + destFolder)
+        sys.exit(2)
+
+# Don't overwrite existing files, so append a count to end of the file name
+i = 0
+initLen = len(csvFile)
+baseCSVFile = csvFile
+while os.path.exists(csvFile + '.csv'):
+    i += 1
+    csvFile = baseCSVFile[:initLen] + str(i)
+    print 'Trying file: %s' % csvFile
+csvFile += '.csv'
 
 # ExIF data hex offsets
 field_names = ['cameraMake',
@@ -126,10 +149,7 @@ if len(badFiles) > 0:
 for bf in badFiles:
     print "\t" + bf
 
-# Write csv to cross-platform Desktop folder (for now)
-home = expanduser('~')
-csvFile = os.path.join(home, 'Desktop', 'exifData.csv')
-
+# Write csv to destination
 with open(csvFile, 'w') as results_file:
 
     # Write column headers to CSV
@@ -234,10 +254,6 @@ if args.piechart:
 
     # Draw pie chart
     generatePieChart(chartInfo[0], chartInfo[1])
-
-# Test code
-#generatePieChart("Shutterspeed", shutterSpeedArray)
-
 
 # TEST CODE ONLY ###############################################################
 # This code will print out every single exif field between 0x0 and 0xfe59
