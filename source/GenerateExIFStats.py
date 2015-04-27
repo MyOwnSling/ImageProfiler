@@ -42,24 +42,12 @@ def generatePieChart(chartName, chartDataArray):
     title(chartName, bbox={'facecolor':'0.8', 'pad':5})
     show()
 
-# Init metadata arrays
-cameraModelArray = []
-exposureModeArray = []
-exposureProgArray = []
-ffFocalLenArray = []
-isoArray = []
-lensModelArray = []
-meteringArray = []
-shutterSpeedArray = []
-apertureArray = []
-focalLengthArray = []
-
 # Parse supplied arguments
 # Parser expects mandatory path to images folder, optional arg specifying pie chart to be created
 parser = argparse.ArgumentParser()
 parser.add_argument("path", type=str, help="Path to the folder of pictures to be processed")
 parser.add_argument("-p", "--piechart", type=str, choices=['camera', 'exposureMode', 'exposureProg', 'focalLengthFF', 'iso', 'lensModel', 'metering', 'shutterSpeed', 'aperture', 'focalLength'], help="Draw a pie chart using the data from the specified metric")
-parser.add_argument("--destination", "-d", type=str, help="Destination of the csv to be created")
+parser.add_argument("--destination", "-d", type=str, help='Creates a CSV of the relevant ExIF data at the specified location')
 args = parser.parse_args()
 
 # Make sure the specified path exists
@@ -67,10 +55,10 @@ if not os.path.exists(args.path):
     print('Invalid directory: ' + args.path)
     sys.exit(1)
 
-# Create default path for the csv file (user's desktop)
+# Create path for the csv file
 home = expanduser('~')
-csvFile = os.path.join(home, 'Desktop', 'exifData')
-destFolder = os.path.join(home, 'Desktop')
+csvFile = ''
+destFolder = ''
 # Make sure the destination path exists, if specified
 if args.destination:
     destFolder = os.path.join(home, args.destination)
@@ -86,7 +74,6 @@ baseCSVFile = csvFile
 while os.path.exists(csvFile + '.csv'):
     i += 1
     csvFile = baseCSVFile[:initLen] + str(i)
-    print 'Trying file: %s' % csvFile
 csvFile += '.csv'
 
 # ExIF data hex offsets
@@ -149,80 +136,97 @@ if len(badFiles) > 0:
 for bf in badFiles:
     print "\t" + bf
 
-# Write csv to destination
-with open(csvFile, 'w') as results_file:
+# Init metadata arrays
+filenameArray = []
+cameraMakeArray = []
+cameraModelArray = []
+exposureModeArray = []
+exposureProgArray = []
+ffFocalLenArray = []
+isoArray = []
+isoSensTypeArray = []
+lensModelArray = []
+meteringArray = []
+shotTimeArray = []
+whiteBalanceArray = []
+shutterSpeedArray = []
+apertureArray = []
+focalLengthArray = []
 
-    # Write column headers to CSV
-    results_file.write('Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n')
+# Assemble exif data into arrays
+for filename, data in exif:
 
-    for filename, data in exif:
+    if data is None:
+        data = dict()
 
-        if data is None:
-            data = dict()
+    filenameArray.append(filename)
+    cameraMakeArray.append(str(data.get(exif_fields['cameraMake'])))
+    cameraModelArray.append(str(data.get(exif_fields['cameraModel'])))
+    exposureModeArray.append(str(data.get(exif_fields['exposureMode'])))
+    exposureProgArray.append(str(data.get(exif_fields['exposureProg'])))
+    ffFocalLenArray.append(str(data.get(exif_fields['fullFrameFocalLen'])))
+    isoArray.append(str(data.get(exif_fields['iso'])))
+    isoSensTypeArray.append(str(data.get(exif_fields['isoSensType'])))
+    lensModelArray.append(str(data.get(exif_fields['lensModel'])))
+    meteringArray.append(str(data.get(exif_fields['metering'])))
+    shotTimeArray.append(str(data.get(exif_fields['shotTime'])))
+    whiteBalanceArray.append(str(data.get(exif_fields['whiteBal'])))
 
-        # extract metadata from exif info
-        cameraMake   = str(data.get(exif_fields['cameraMake']))
-        cameraModel  = str(data.get(exif_fields['cameraModel']))
-        exposureMode = str(data.get(exif_fields['exposureMode']))
-        exposureProg = str(data.get(exif_fields['exposureProg']))
-        ffFocalLen   = str(data.get(exif_fields['fullFrameFocalLen']))
-        iso          = str(data.get(exif_fields['iso']))
-        isoSensType  = str(data.get(exif_fields['isoSensType']))
-        lensModel    = str(data.get(exif_fields['lensModel']))
-        metering     = str(data.get(exif_fields['metering']))
-        shotTime     = str(data.get(exif_fields['shotTime']))
-        whiteBalance = str(data.get(exif_fields['whiteBal']))
+    # Do some special data handling for a few fields
+    _shutterSpd = data.get(exif_fields['shutterSpeed'])
+    if _shutterSpd is not None:
+        shutterSpeed = str(_shutterSpd[0]) + '/' + str(_shutterSpd[1])
+    else:
+        shutterSpeed = ''
 
-        # Do some special data handling for a few fields
-        _shutterSpd = data.get(exif_fields['shutterSpeed'])
-        if _shutterSpd is not None:
-            shutterSpeed = str(_shutterSpd[0]) + '/' + str(_shutterSpd[1])
-        else:
-            shutterSpeed = ''
+    _ap = data.get(exif_fields['aperture'])
+    if _ap is not None:
+        aperture = str(float(_ap[0]) / _ap[1])
+    else:
+        aperture = ''
 
-        _ap = data.get(exif_fields['aperture'])
-        if _ap is not None:
-            aperture = str(float(_ap[0]) / _ap[1])
-        else:
-            aperture = ''
+    _focalLen = data.get(exif_fields['focalLen'])
+    if _focalLen is not None:
+        focalLength = str(_focalLen[0] / _focalLen[1])
+    else:
+        focalLength = ''
 
-        _focalLen = data.get(exif_fields['focalLen'])
-        if _focalLen is not None:
-            focalLength = str(_focalLen[0] / _focalLen[1])
-        else:
-            focalLength = ''
+    shutterSpeedArray.append(shutterSpeed)
+    apertureArray.append(aperture)
+    focalLengthArray.append(focalLength)
 
-        # write metadata to new CSV row
-        write = lambda x: results_file.write(x + ',')
 
-        write(filename)
-        write(cameraMake)
-        write(cameraModel)
-        write(lensModel)
-        write(shutterSpeed)
-        write(aperture)
-        write(iso)
-        write(focalLength)
-        write(ffFocalLen)
-        write(isoSensType)
-        write(exposureProg)
-        write(exposureMode)
-        write(metering)
-        write(whiteBalance)
-        write(shotTime)
 
-        cameraModelArray.append(cameraModel)
-        exposureModeArray.append(exposureMode)
-        exposureProgArray.append(exposureProg)
-        ffFocalLenArray.append(ffFocalLen)
-        isoArray.append(iso)
-        lensModelArray.append(lensModel)
-        meteringArray.append(metering)
-        shutterSpeedArray.append(shutterSpeed)
-        apertureArray.append(aperture)
-        focalLengthArray.append(focalLength)
 
-        results_file.write('\n')
+
+# Write csv to destination if specified
+if args.destination:
+    with open(csvFile, 'w') as results_file:
+
+        # Write column headers to CSV
+        results_file.write('Filename,CameraMake,CameraModel,Lens,ShutterSpeed,Aperture,ISO,FocalLength,FullFrameFocalLength,ISOSensType,ExposureProg,ExposureMode,Metering,WhiteBalance,Time\n')
+
+        for i in range(len(cameraMakeArray)):
+            # write metadata to new CSV row
+            write = lambda x: results_file.write(x + ',')
+
+            write(filenameArray[i])
+            write(cameraMakeArray[i])
+            write(cameraModelArray[i])
+            write(lensModelArray[i])
+            write(shutterSpeedArray[i])
+            write(apertureArray[i])
+            write(isoArray[i])
+            write(focalLengthArray[i])
+            write(ffFocalLenArray[i])
+            write(isoSensTypeArray[i])
+            write(exposureProgArray[i])
+            write(exposureModeArray[i])
+            write(meteringArray[i])
+            write(whiteBalanceArray[i])
+            write(shotTimeArray[i])
+
+            results_file.write('\n')
 
 if args.piechart:
     pc = args.piechart
